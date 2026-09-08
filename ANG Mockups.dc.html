@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="stylesheet" href="industry.css">
+<style>
+body{margin:0;background:#d9dadc}
+a{color:var(--color-accent)}a:hover{color:var(--color-accent-700)}
+.st{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;flex:none;font-size:11px;letter-spacing:.06em;padding:3px 9px;border-radius:0;font-family:var(--font-heading);text-transform:uppercase}
+.st-up{border:1px solid var(--color-accent);color:var(--color-accent-800)}
+.st-down{background:var(--color-neutral-900);color:var(--color-bg)}
+.st-warn{border:1px solid var(--color-neutral-500);color:var(--color-neutral-800);background:var(--color-neutral-200)}
+.st-res{border:1px dashed var(--color-neutral-500);color:var(--color-neutral-700)}
+.mono{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.btn{white-space:nowrap;flex:none}
+.navlink{border:0;background:transparent;cursor:pointer;font-family:var(--font-heading);font-weight:600;font-size:14px;letter-spacing:.04em;text-transform:uppercase;padding:6px 2px;color:var(--color-neutral-700);border-bottom:2px solid transparent}
+.navlink:hover{color:var(--color-accent-700)}
+.navlink[data-on="1"]{color:var(--color-text);border-bottom-color:var(--color-accent)}
+.rowbtn{border:0;background:transparent;cursor:pointer;font-family:var(--font-heading);font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--color-accent-700);padding:0}
+.rowbtn:hover{text-decoration:underline}
+</style>
+</helmet>
+<x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" tabs="{{ tabs }}" url="127.0.0.1:5000/dashboard" width="{{ 1360 }}" height="{{ 900 }}" hint-size="1360px,900px">
+<div style="min-height:100%;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body);display:flex;flex-direction:column">
+
+<div style="display:flex;align-items:center;gap:26px;padding:14px 24px 0 24px">
+<div style="font-family:var(--font-heading);font-weight:600;font-size:17px;letter-spacing:.08em;text-transform:uppercase;line-height:1.1">Autonomous Network<br>Guardian</div>
+<div style="width:1px;align-self:stretch;background:var(--color-divider)"></div>
+<div style="display:flex;gap:22px;align-items:center;flex:1">
+<button class="navlink" data-on="{{ onDash }}" onClick="{{ goDash }}">Dashboard</button>
+<button class="navlink" data-on="{{ onDevices }}" onClick="{{ goDevices }}">Devices</button>
+<button class="navlink" data-on="{{ onDiag }}" onClick="{{ goDiag }}">Diagnosis</button>
+<button class="navlink" data-on="{{ onInc }}" onClick="{{ goInc }}">Incidents</button>
+<button class="navlink" data-on="{{ onSim }}" onClick="{{ goSim }}">Simulation</button>
+</div>
+<div style="text-align:right">
+<div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600)">Monitoring cycle</div>
+<div class="mono">every {{ cycle }}s · last {{ lastCheck }}</div>
+</div>
+</div>
+<div style="height:1px;background:var(--color-divider);margin:14px 0 0"></div>
+
+<div style="display:flex;align-items:center;gap:12px;padding:12px 24px;background:var(--color-surface);border-bottom:1px solid var(--color-divider)">
+<span style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600)">Active scenario</span>
+<span class="st st-warn">{{ scLabel }}</span>
+<span class="text-muted" style="font-size:12px;flex:1">{{ scNote }}</span>
+<button class="btn btn-secondary" onClick="{{ goSim }}">Change scenario</button>
+</div>
+
+<div style="flex:1;padding:24px">
+
+<sc-if value="{{ onDash }}" hint-placeholder-val="{{ true }}">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:28px;align-items:start">
+<div style="display:flex;flex-direction:column;gap:24px;min-width:0">
+
+<div style="display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:20px">
+<div class="card blueprint" style="padding:20px;gap:14px">
+<i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+<div class="card-kicker">Network health score</div>
+<div style="display:flex;align-items:flex-end;gap:10px">
+<div style="font-family:var(--font-heading);font-weight:600;font-size:82px;line-height:.85">{{ health }}</div>
+<div style="padding-bottom:10px">
+<div class="mono" style="color:var(--color-neutral-600)">/ 100</div>
+<div style="font-family:var(--font-heading);font-size:20px;letter-spacing:.08em;text-transform:uppercase">{{ healthLabel }}</div>
+</div>
+</div>
+<div style="height:8px;background:var(--color-neutral-300);position:relative">
+<div style="position:absolute;inset:0;right:auto;background:var(--color-accent);width:{{ healthPct }}"></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:4px;margin-top:2px">
+<sc-for list="{{ factors }}" as="f" hint-placeholder-count="3">
+<div style="display:flex;justify-content:space-between;font-size:12px;border-bottom:1px dotted var(--color-divider);padding-bottom:3px">
+<span>{{ f.name }}</span><span class="mono">{{ f.val }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:20px">
+<div class="card blueprint" style="padding:16px;gap:10px">
+<i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+<div class="card-kicker">Shared dependencies</div>
+<sc-for list="{{ deps }}" as="d" hint-placeholder-count="3">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+<span style="font-family:var(--font-heading);font-size:16px;letter-spacing:.05em;text-transform:uppercase">{{ d.name }}</span>
+<span class="st {{ d.cls }}">{{ d.state }}</span>
+</div>
+</sc-for>
+</div>
+<div class="card blueprint" style="padding:16px;gap:8px">
+<i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+<div class="card-kicker">Devices</div>
+<div style="display:flex;align-items:baseline;gap:8px">
+<span style="font-family:var(--font-heading);font-weight:600;font-size:38px;line-height:1">{{ onlineCount }}</span>
+<span class="mono" style="color:var(--color-neutral-600)">/ {{ totalCount }} online</span>
+</div>
+<div style="display:flex;gap:4px">
+<sc-for list="{{ devices }}" as="d" hint-placeholder-count="6">
+<div style="flex:1;height:22px;border:1px solid var(--color-divider);display:grid;place-items:center;font-size:9px;letter-spacing:.04em;background:{{ d.chipBg }};color:{{ d.chipFg }}">{{ d.short }}</div>
+</sc-for>
+</div>
+</div>
+</div>
+</div>
+
+<div class="card blueprint" style="padding:20px;gap:14px">
+<i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+<div style="display:flex;align-items:center;gap:10px">
+<div class="card-kicker" style="margin:0">Current diagnosis</div>
+<span class="st {{ diag.prioCls }}">Priority {{ diag.prio }}</span>
+<span style="flex:1"></span>
+<button class="btn btn-secondary" onClick="{{ goDiag }}">Full diagnosis</button>
+</div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 200px;gap:20px;align-items:start">
+<div>
+<div style="font-family:var(--font-heading);font-weight:600;font-size:30px;line-height:1.05">{{ diag.cause }}</div>
+<div class="text-muted" style="font-size:13px;margin-top:4px">Affected devices: <span class="mono">{{ diag.affected }}</span></div>
+<div style="display:flex;flex-direction:column;gap:5px;margin-top:12px">
+<sc-for list="{{ diag.evidence }}" as="e" hint-placeholder-count="4">
+<div style="display:flex;gap:8px;font-size:13px"><span style="color:var(--color-accent-700)">✓</span><span>{{ e.text }}</span><span style="flex:1"></span><span class="mono" style="color:var(--color-neutral-600)">{{ e.score }}</span></div>
+</sc-for>
+</div>
+</div>
+<div style="border-left:1px solid var(--color-divider);padding-left:16px">
+<div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600)">Confidence</div>
+<div style="font-family:var(--font-heading);font-weight:600;font-size:44px;line-height:1">{{ diag.conf }}%</div>
+<div style="height:6px;background:var(--color-neutral-300);position:relative;margin-top:6px">
+<div style="position:absolute;inset:0;right:auto;background:var(--color-accent);width:{{ diag.confPct }}"></div>
+</div>
+<div class="text-muted" style="font-size:11px;margin-top:8px">Rule-based diagnostic score, not a statistical guarantee.</div>
+</div>
+</div>
+</div>
+
+<div class="card blueprint" style="padding:0;gap:0">
+<i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+<div style="display:flex;align-items:center;gap:10px;padding:14px 16px 8px">
+<div class="card-kicker" style="margin:0">Active incidents</div>
+<span style="flex:1"></span>
+<button class="btn btn-secondary" onClick="{{ goInc }}">All incidents</button>
+</div>
+<div style="padding:0 16px 14px">
+<table class="table">
+<thead><tr><th>ID</th><th>Root cause</th><th>Priority</th><th>Affected</th><th>Started</th><th>Status</th><th></th></tr></thead>
+<tbody>
+<sc-for list="{{ activeIncidents }}" as="i" hint-placeholder-count="1">
+<tr>
+<td class="mono">{{ i.id }}</td>
+<td>{{ i.cause }}</td>
+<td><span class="st {{ i.prioCls }}">{{ i.prio }}</span></td>
+<td class="mono">{{ i.affected }}</td>
+<td class="mono">{{ i.started }}</td>
+<td><span class="st {{ i.statusCls }}">{{ i.status }}</span></td>
+<td style="text-align:right"><button class="rowbtn" onClick="{{ i.open }}">Open</button></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+<sc-if value="{{ noActive }}">
+<div class="text-muted" style="font-size:13px;padding:10px 2px">No active incidents. The last closed incident recovered in {{ lastRecovery }}.</div>
+</sc-if>
+</div>
+</div>
+
+</div>
+
+<div style="display:flex;flex-direction:column;gap:24px">
+<div class="card blueprint" style="padding:16px;gap:12px">
+<i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+<div class="card-kicker">Topology</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:0">
+<div style="display:flex;gap:8px;width:100%">
+<sc-for list="{{ clients }}" as="c" hint-placeholder-count="3">
+<div style="flex:1;border:1px solid var(--color-divider);padding:6px 0;text-align:center;font-size:11px;letter-spacing:.04em;background:{{ c.chipBg }};color:{{ c.chipFg }}">{{ c.short }}</div>
+</sc-for>
+</div>
+<div style="width:60%;height:14px;border-left:1px solid var(--color-divider);border-right:1px solid var(--color-divider);border-bottom:1px solid var(--color-divider)"></div>
+<div style="width:1px;height:10px;background:var(--color-divider)"></div>
+<div style="width:100%;border:1px solid var(--color-divider);padding:8px 0;text-align:center;font-family:var(--font-heading);font-size:15px;letter-spacing:.06em;text-transform:uppercase;background:{{ gwChipBg }};color:{{ gwChipFg }}">Gateway {{ gwMark }}</div>
+<div style="width:1px;height:16px;background:var(--color-divider)"></div>
+<div style="width:100%;border:1px dashed var(--color-divider);padding:8px 0;text-align:center;font-family:var(--font-heading);font-size:15px;letter-spacing:.06em;text-transform:uppercase;background:{{ inetChipBg }};color:{{ inetChipFg }}">Internet {{ inetMark }}</div>
+</div>
+<div class="text-muted" style="font-size:11px">{{ topoNote }}</div>
+</div>
+
+<div class="card blueprint" style="padding:16px;gap:10px">
+<i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+<div class="card-kicker">Recent events</div>
+<div style="display:flex;flex-direction:column;gap:0">
+<sc-for list="{{ events }}" as="e" hint-placeholder-count="5">
+<div style="display:flex;gap:10px;padding:6px 0;border-bottom:1px dotted var(--color-divider);font-size:12px">
+<span class="mono" style="color:var(--color-neutral-600)">{{ e.t }}</span><span>{{ e.text }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ onDevices }}">
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;align-items:flex-end;gap:12px">
+<div>
+<h3 style="margin:0">Registered devices</h3>
+<div class="text-muted" style="font-size:13px">{{ onlineCount }} of {{ totalCount }} online · measurements from the latest monitoring cycle</div>
+</div>
+<span style="flex:1"></span>
+<button class="btn btn-primary blueprint" onClick="{{ openDialog }}"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>Register device</button>
+</div>
+<div class="card blueprint" style="padding:16px">
+<i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+<table class="table">
+<thead><tr><th>Device</th><th>IP address</th><th>Type</th><th>Role</th><th>Status</th><th>Latency</th><th>Packet loss</th><th>Last checked</th></tr></thead>
+<tbody>
+<sc-for list="{{ devices }}" as="d" hint-placeholder-count="6">
+<tr>
+<td style="font-family:var(--font-heading);font-size:16px;letter-spacing:.04em">{{ d.name }}</td>
+<td class="mono">{{ d.ip }}</td>
+<td>{{ d.type }}</td>
+<td>{{ d.role }}</td>
+<td><span class="st {{ d.cls }}">{{ d.state }}</span></td>
+<td class="mono">{{ d.latency }}</td>
+<td class="mono">{{ d.loss }}</td>
+<td class="mono" style="color:var(--color-neutral-600)">{{ d.checked }}</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<div class="text-muted" style="font-size:12px">Latency classification — 0–50 ms good · 50–100 ms moderate · 100–200 ms high · &gt;200 ms critical. Thresholds are configurable.</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ onDiag }}">
+<div style="display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:24px;align-items:start">
+<div style="display:flex;flex-direction:column;gap:20px">
+<div class="card blueprint" style="padding:20px;gap:12px">
+<i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+<div class="card-kicker">Probable root cause</div>
+<div style="font-family:var(--font-heading);font-weight:600;font-size:40px;line-height:1.02">{{ diag.cause }}</div>
+<div style="display:flex;gap:8px;align-items:center">
+<span class="st {{ diag.prioCls }}">Priority {{ diag.prio }}</span>
+<span class="st st-warn">Confidence {{ diag.conf }}%</span>
+<span class="mono" style="color:var(--color-neutral-600)">rule: {{ diag.rule }}</span>
+</div>
+<p class="text-muted" style="font-size:13px;margin:0">{{ diag.reasoning }}</p>
+</div>
+<div class="card blueprint" style="padding:20px;gap:12px">
+<i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+<div class="card-kicker">Evidence</div>
+<div style="display:flex;flex-direction:column;gap:0">
+<sc-for list="{{ diag.evidence }}" as="e" hint-placeholder-count="4">
+<div style="display:flex;gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--color-divider)">
+<span style="color:var(--color-accent-700)">✓</span>
+<div style="flex:1"><div style="font-size:14px">{{ e.text }}</div><div class="mono" style="color:var(--color-neutral-600)">{{ e.detail }}</div></div>
+<span class="mono">{{ e.score }}</span>
+</div>
+</sc-for>
+</div>
+<div style="display:flex;justify-content:flex-end;gap:10px;font-family:var(--font-heading);font-size:16px;letter-spacing:.04em;text-transform:uppercase">Total<span class="mono" style="font-size:14px">{{ diag.conf }}</span></div>
+</div>
+<div class="card blueprint" style="padding:20px;gap:12px">
+<i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+<div class="card-kicker">Hypotheses compared</div>
+<sc-for list="{{ diag.hypotheses }}" as="h" hint-placeholder-count="4">
+<div style="display:flex;align-items:center;gap:10px">
+<span style="width:190px;font-size:13px">{{ h.name }}</span>
+<div style="flex:1;height:10px;background:var(--color-neutral-200);position:relative"><div style="position:absolute;inset:0;right:auto;background:{{ h.fill }};width:{{ h.pct }}"></div></div>
+<span class="mono" style="width:44px;text-align:right">{{ h.score }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:20px">
+<div class="card blueprint" style="padding:18px;gap:10px">
+<i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+<div class="card-kicker">Affected devices</div>
+<sc-for list="{{ diag.affectedList }}" as="a" hint-placeholder-count="3">
+<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px dotted var(--color-divider)">
+<span style="font-family:var(--font-heading);font-size:16px;letter-spacing:.04em">{{ a.name }}</span>
+<span class="mono" style="color:var(--color-neutral-600)">{{ a.reason }}</span>
+</div>
+</sc-for>
+<sc-if value="{{ diag.noneAffected }}"><div class="text-muted" style="font-size:13px">No devices currently affected.</div></sc-if>
+</div>
+<div class="card blueprint" style="padding:18px;gap:10px">
+<i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+<div class="card-kicker">Recommended action</div>
+<sc-for list="{{ diag.actions }}" as="a" hint-placeholder-count="4">
+<div style="display:flex;gap:10px;font-size:14px;align-items:baseline">
+<span class="mono" style="color:var(--color-accent-700)">{{ a.n }}</span><span>{{ a.text }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ onInc }}">
+<div style="display:flex;flex-direction:column;gap:16px">
+<div>
+<h3 style="margin:0">Incidents</h3>
+<div class="text-muted" style="font-size:13px">Open incidents close automatically once recovery is confirmed across two monitoring cycles.</div>
+</div>
+<div class="card blueprint" style="padding:16px">
+<i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+<table class="table">
+<thead><tr><th>ID</th><th>Root cause</th><th>Priority</th><th>Status</th><th>Affected devices</th><th>Started</th><th>Recovered</th><th>Duration</th><th></th></tr></thead>
+<tbody>
+<sc-for list="{{ incidents }}" as="i" hint-placeholder-count="4">
+<tr>
+<td class="mono">{{ i.id }}</td>
+<td>{{ i.cause }}</td>
+<td><span class="st {{ i.prioCls }}">{{ i.prio }}</span></td>
+<td><span class="st {{ i.statusCls }}">{{ i.status }}</span></td>
+<td class="mono">{{ i.affected }}</td>
+<td class="mono">{{ i.started }}</td>
+<td class="mono">{{ i.resolved }}</td>
+<td class="mono">{{ i.duration }}</td>
+<td style="text-align:right"><button class="rowbtn" onClick="{{ i.open }}">Timeline</button></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ onIncDetail }}">
+<div style="display:flex;flex-direction:column;gap:18px">
+<button class="rowbtn" style="align-self:flex-start" onClick="{{ goInc }}">← Back to incidents</button>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:24px;align-items:start">
+<div class="card blueprint" style="padding:20px;gap:14px">
+<i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+<div style="display:flex;align-items:center;gap:10px">
+<span class="mono">{{ detail.id }}</span>
+<span class="st {{ detail.statusCls }}">{{ detail.status }}</span>
+<span class="st {{ detail.prioCls }}">{{ detail.prio }}</span>
+</div>
+<div style="font-family:var(--font-heading);font-weight:600;font-size:34px;line-height:1.05">{{ detail.cause }}</div>
+<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;border-top:1px solid var(--color-divider);border-bottom:1px solid var(--color-divider);padding:12px 0">
+<div><div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600)">Started</div><div class="mono">{{ detail.started }}</div></div>
+<div><div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600)">Recovered</div><div class="mono">{{ detail.resolved }}</div></div>
+<div><div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600)">Duration</div><div class="mono">{{ detail.duration }}</div></div>
+<div><div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600)">Confidence</div><div class="mono">{{ detail.conf }}%</div></div>
+</div>
+<div class="card-kicker">Affected devices</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<sc-for list="{{ detail.devices }}" as="d" hint-placeholder-count="3">
+<span class="st st-warn">{{ d.name }}</span>
+</sc-for>
+</div>
+<div class="card-kicker" style="margin-top:6px">Diagnostic events</div>
+<sc-for list="{{ detail.rules }}" as="r" hint-placeholder-count="2">
+<div style="display:flex;gap:12px;font-size:13px;padding:6px 0;border-bottom:1px dotted var(--color-divider)">
+<span class="mono" style="width:150px;color:var(--color-accent-700)">{{ r.rule }}</span><span>{{ r.evidence }}</span>
+</div>
+</sc-for>
+</div>
+<div class="card blueprint" style="padding:20px;gap:0">
+<i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+<div class="card-kicker" style="margin-bottom:10px">Incident timeline</div>
+<sc-for list="{{ detail.timeline }}" as="t" hint-placeholder-count="7">
+<div style="display:flex;gap:12px;align-items:stretch">
+<span class="mono" style="width:46px;color:var(--color-neutral-600);padding-top:8px">{{ t.time }}</span>
+<div style="display:flex;flex-direction:column;align-items:center;width:12px">
+<div style="width:9px;height:9px;border:1px solid var(--color-accent);background:{{ t.dot }};margin-top:12px"></div>
+<div style="flex:1;width:1px;background:var(--color-divider)"></div>
+</div>
+<div style="padding:8px 0 14px;font-size:13px">{{ t.text }}</div>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ onSim }}">
+<div style="display:flex;flex-direction:column;gap:18px;max-width:900px">
+<div>
+<h3 style="margin:0">Simulation mode</h3>
+<div class="text-muted" style="font-size:13px">Controlled fault scenarios for demonstrations. Each scenario is deterministic: the monitoring engine reads simulated state instead of live network tests.</div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px">
+<sc-for list="{{ sims }}" as="s" hint-placeholder-count="7">
+<button class="card blueprint" style="padding:16px;gap:6px;text-align:left;cursor:pointer;background:{{ s.bg }};color:{{ s.fg }};font-family:var(--font-body)" onClick="{{ s.on }}">
+<i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+<div style="display:flex;align-items:center;gap:8px">
+<span style="font-family:var(--font-heading);font-weight:600;font-size:19px;letter-spacing:.04em;text-transform:uppercase">{{ s.label }}</span>
+<span style="flex:1"></span>
+<span class="mono" style="font-size:11px;opacity:.7">{{ s.active }}</span>
+</div>
+<div style="font-size:13px;opacity:.8">{{ s.note }}</div>
+<div class="mono" style="font-size:11px;opacity:.65">POST {{ s.endpoint }}</div>
+</button>
+</sc-for>
+</div>
+<div class="text-muted" style="font-size:12px">Recovery closes the open incident, records the recovery timestamp and duration, and restores the health score.</div>
+</div>
+</sc-if>
+
+</div>
+
+<sc-if value="{{ dialog }}">
+<div class="dialog-backdrop" onClick="{{ closeDialog }}">
+<div class="dialog blueprint" style="width:min(460px,100%);background:var(--color-bg);padding:22px" onClick="{{ stop }}">
+<i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+<div class="card-kicker">Device management</div>
+<div class="dialog-title">Register device</div>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
+<div class="field" style="grid-column:span 2"><label>Device name</label><input class="input" placeholder="PC-04"></div>
+<div class="field"><label>IP address</label><input class="input" placeholder="192.168.1.13"></div>
+<div class="field"><label>Device type</label>
+<select class="input"><option>Computer</option><option>Router</option><option>Server</option><option>Printer</option></select>
+</div>
+<div class="field" style="grid-column:span 2"><label>Network role</label>
+<div class="seg">
+<label class="seg-opt"><input type="radio" name="role" checked>Client</label>
+<label class="seg-opt"><input type="radio" name="role">Gateway</label>
+<label class="seg-opt"><input type="radio" name="role">Service</label>
+<label class="seg-opt"><input type="radio" name="role">Peripheral</label>
+</div>
+</div>
+<div class="field" style="grid-column:span 2"><label>Depends on (shared dependency)</label>
+<select class="input"><option>RTR-01 — 192.168.1.1 (Gateway)</option><option>None</option></select>
+</div>
+</div>
+<div class="dialog-body text-muted" style="font-size:12px">The dependency link is what lets the diagnosis engine collapse several device symptoms into one shared root cause.</div>
+<div class="dialog-actions">
+<button class="btn btn-secondary" onClick="{{ closeDialog }}">Cancel</button>
+<button class="btn btn-primary" onClick="{{ closeDialog }}">Save device</button>
+</div>
+</div>
+</div>
+</sc-if>
+
+</div>
+</x-import>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;initialScenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;healthy&quot;,&quot;device&quot;,&quot;gateway&quot;,&quot;dns&quot;,&quot;internet&quot;,&quot;latency&quot;,&quot;loss&quot;,&quot;recovery&quot;],&quot;default&quot;:&quot;gateway&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototype&quot;},&quot;cycleSeconds&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:10,&quot;min&quot;:5,&quot;max&quot;:60,&quot;unit&quot;:&quot;s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Prototype&quot;},&quot;showTopology&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Prototype&quot;}}">
+const INK = 'var(--color-neutral-900)', PAPER = 'var(--color-bg)', OK_BG = 'transparent', OK_FG = 'var(--color-text)';
+
+const BASE = [
+  { name: 'PC-01', short: 'PC-01', ip: '192.168.1.10', type: 'Computer', role: 'Client', lat: 8 },
+  { name: 'PC-02', short: 'PC-02', ip: '192.168.1.11', type: 'Computer', role: 'Client', lat: 11 },
+  { name: 'PC-03', short: 'PC-03', ip: '192.168.1.12', type: 'Computer', role: 'Client', lat: 9 },
+  { name: 'RTR-01', short: 'RTR', ip: '192.168.1.1', type: 'Router', role: 'Gateway', lat: 2 },
+  { name: 'SRV-01', short: 'SRV', ip: '192.168.1.20', type: 'Server', role: 'Service', lat: 4 },
+  { name: 'PRN-01', short: 'PRN', ip: '192.168.1.30', type: 'Printer', role: 'Peripheral', lat: 14 }
+];
+
+const SCEN = {
+  healthy: { label: 'Healthy network', note: 'All monitored targets responding. No fault hypothesis exceeds threshold.', down: [], gw: 'up', dns: 'up', inet: 'up', health: 98 },
+  device: { label: 'Individual device failure', note: 'PC-02 unreachable while the gateway and its peers stay healthy.', down: ['PC-02'], gw: 'up', dns: 'up', inet: 'up', health: 82 },
+  gateway: { label: 'Gateway failure', note: 'Three clients, the gateway and external connectivity failed in the same cycle.', down: ['PC-01', 'PC-02', 'PC-03', 'RTR-01'], gw: 'down', dns: 'down', inet: 'down', health: 34 },
+  dns: { label: 'DNS failure', note: 'Gateway and external IP reachable; name resolution failing.', down: [], gw: 'up', dns: 'down', inet: 'up', health: 61 },
+  internet: { label: 'Internet / WAN failure', note: 'Local network intact, gateway reachable, external endpoint unreachable.', down: [], gw: 'up', dns: 'down', inet: 'down', health: 55 },
+  latency: { label: 'High latency', note: 'All targets reachable with round-trip times above the moderate threshold.', down: [], gw: 'up', dns: 'up', inet: 'up', health: 74, degrade: 'latency' },
+  loss: { label: 'Packet loss', note: 'Reachability intact, sustained loss across the shared segment.', down: [], gw: 'up', dns: 'up', inet: 'up', health: 68, degrade: 'loss' },
+  recovery: { label: 'Recovery', note: 'Gateway returned. INC-014 closed automatically after two confirming cycles.', down: [], gw: 'up', dns: 'up', inet: 'up', health: 96, recovered: true }
+};
+
+const DIAG = {
+  healthy: { cause: 'Healthy network — no fault', conf: 99, prio: 'None', rule: 'no_fault', reasoning: 'Every hypothesis scored below the incident threshold, so no incident was created.',
+    evidence: [['All 6 devices reachable', 'last 3 cycles', '+0'], ['Gateway reachable', '2 ms round trip', '+0'], ['DNS resolution succeeded', 'ang.test → 93.184.216.34', '+0'], ['External endpoint reachable', '1.1.1.1, 18 ms', '+0']],
+    affected: '—', affectedList: [],
+    actions: ['No action required.', 'Continue monitoring on the 10 s cycle.'],
+    hyp: [['Healthy / no fault', 100], ['Individual device failure', 0], ['Gateway failure', 0], ['DNS failure', 0]] },
+  device: { cause: 'Individual device failure — PC-02', conf: 88, prio: 'Medium', rule: 'individual_device_failure', reasoning: 'Only one device is unreachable while the gateway and the other clients respond, so the shared-dependency hypothesis is not supported.',
+    evidence: [['Exactly one device unreachable', 'PC-02, 3 consecutive cycles', '+50'], ['Gateway reachable', 'RTR-01, 2 ms', '+20'], ['Peer clients healthy', 'PC-01 8 ms, PC-03 9 ms', '+10'], ['External connectivity normal', 'DNS + internet OK', '+8']],
+    affected: 'PC-02', affectedList: [['PC-02', 'unreachable, ICMP timeout']],
+    actions: ['Check device power.', 'Check network cable or Wi-Fi association.', 'Check local network configuration.', 'Check network adapter status.'],
+    hyp: [['Individual device failure', 88], ['Packet loss', 22], ['Gateway failure', 8], ['DNS failure', 0]] },
+  gateway: { cause: 'Gateway failure — RTR-01', conf: 95, prio: 'Critical', rule: 'gateway_failure', reasoning: 'PC-01, PC-02 and PC-03 all depend on RTR-01. Their simultaneous failure plus an unreachable gateway is better explained by one shared fault than by three independent device faults.',
+    evidence: [['Multiple devices affected', 'PC-01, PC-02, PC-03', '+30'], ['Gateway unreachable', 'RTR-01 192.168.1.1, 5/5 lost', '+40'], ['Internet unavailable', '1.1.1.1 unreachable', '+20'], ['Failures in the same monitoring period', 'cycle 10:32:15', '+10']],
+    affected: 'PC-01, PC-02, PC-03', affectedList: [['PC-01', 'shared dependency RTR-01'], ['PC-02', 'shared dependency RTR-01'], ['PC-03', 'shared dependency RTR-01']],
+    actions: ['Check router power.', 'Check Ethernet cables.', 'Verify gateway configuration.', 'Check router interface status.'],
+    hyp: [['Gateway failure', 95], ['Internet / WAN failure', 40], ['Individual device failure', 12], ['DNS failure', 10]] },
+  dns: { cause: 'DNS failure', conf: 84, prio: 'High', rule: 'dns_failure', reasoning: 'The gateway responds and an external IP address is reachable, so the fault is isolated to name resolution rather than general connectivity.',
+    evidence: [['DNS resolution failed', 'ang.test, 3 attempts, SERVFAIL', '+44'], ['Gateway reachable', 'RTR-01, 2 ms', '+20'], ['External IP reachable', '1.1.1.1, 19 ms', '+20'], ['All devices reachable', '6/6 online', '+0']],
+    affected: 'All clients (name resolution only)', affectedList: [['PC-01', 'cannot resolve hostnames'], ['PC-02', 'cannot resolve hostnames'], ['PC-03', 'cannot resolve hostnames']],
+    actions: ['Check DNS server configuration.', 'Check DNS service availability.', 'Try an alternate DNS resolver.'],
+    hyp: [['DNS failure', 84], ['Internet / WAN failure', 25], ['Gateway failure', 5], ['Individual device failure', 0]] },
+  internet: { cause: 'Internet / WAN failure', conf: 86, prio: 'Critical', rule: 'internet_failure', reasoning: 'Local devices and the gateway are healthy while the external test endpoint is unreachable, which points past the gateway to the WAN link.',
+    evidence: [['External endpoint unreachable', '1.1.1.1, 5/5 lost', '+46'], ['Gateway reachable', 'RTR-01, 2 ms', '+20'], ['All local devices reachable', '6/6 online', '+12'], ['DNS resolution failed', 'consistent with WAN loss', '+8']],
+    affected: 'All clients (external access)', affectedList: [['PC-01', 'no external access'], ['PC-02', 'no external access'], ['PC-03', 'no external access'], ['SRV-01', 'no external access']],
+    actions: ['Check WAN connection.', 'Check router external interface.', 'Check ISP connectivity or status page.'],
+    hyp: [['Internet / WAN failure', 86], ['DNS failure', 30], ['Gateway failure', 14], ['Individual device failure', 0]] },
+  latency: { cause: 'Shared network degradation — high latency', conf: 72, prio: 'High', rule: 'high_latency', reasoning: 'Every target is reachable but round-trip times rose together, which suggests congestion on the shared segment rather than a device fault.',
+    evidence: [['Latency above threshold on 5 targets', '148–212 ms', '+40'], ['No unreachable devices', '6/6 online', '+16'], ['Gateway latency also elevated', 'RTR-01 132 ms', '+16']],
+    affected: 'PC-01, PC-02, PC-03, SRV-01', affectedList: [['PC-01', '186 ms'], ['PC-02', '212 ms'], ['PC-03', '148 ms'], ['SRV-01', '164 ms']],
+    actions: ['Check network congestion.', 'Inspect cables and interfaces.', 'Check gateway performance.', 'Investigate overloaded devices or links.'],
+    hyp: [['High latency / congestion', 72], ['Packet loss', 34], ['Gateway failure', 6], ['Individual device failure', 0]] },
+  loss: { cause: 'Shared network degradation — packet loss', conf: 76, prio: 'High', rule: 'packet_loss', reasoning: 'Sustained loss on several targets that share the same switch and gateway, with no target fully unreachable.',
+    evidence: [['Packet loss above threshold', '20–40% on 4 targets', '+44'], ['All devices still reachable', '6/6 online', '+16'], ['Loss present on gateway path', 'RTR-01 18%', '+16']],
+    affected: 'PC-01, PC-02, PC-03, PRN-01', affectedList: [['PC-01', '30% loss'], ['PC-02', '40% loss'], ['PC-03', '20% loss'], ['PRN-01', '25% loss']],
+    actions: ['Check network congestion.', 'Inspect cables and interfaces.', 'Check gateway performance.', 'Investigate overloaded devices or links.'],
+    hyp: [['Packet loss', 76], ['High latency / congestion', 41], ['Gateway failure', 8], ['Individual device failure', 4]] },
+  recovery: { cause: 'Gateway failure — recovered', conf: 95, prio: 'Critical', rule: 'recovery_confirmed', reasoning: 'The gateway responded for two consecutive cycles and the dependent symptoms cleared, so INC-014 was closed automatically and the recovery duration was recorded.',
+    evidence: [['Gateway reachable again', 'RTR-01, 2 ms, 2 cycles', '+40'], ['Dependent devices back online', 'PC-01, PC-02, PC-03', '+30'], ['External connectivity restored', '1.1.1.1, 18 ms', '+20'], ['Recovery confirmed over 2 cycles', '10:35:42 → 10:35:52', '+10']],
+    affected: 'PC-01, PC-02, PC-03 (recovered)', affectedList: [['PC-01', 'recovered 10:35:42'], ['PC-02', 'recovered 10:35:42'], ['PC-03', 'recovered 10:35:52']],
+    actions: ['Confirm the router fix is permanent.', 'Review the incident timeline with the lab log.', 'No further action required.'],
+    hyp: [['Gateway failure (closed)', 95], ['Internet / WAN failure', 40], ['Individual device failure', 12], ['DNS failure', 10]] }
+};
+
+const FACTORS = { healthy: [['Device availability 6/6', '25 / 25'], ['Gateway health', '20 / 20'], ['Latency + packet loss', '28 / 30'], ['DNS + internet', '25 / 25']],
+  device: [['Device availability 5/6', '21 / 25'], ['Gateway health', '20 / 20'], ['Latency + packet loss', '26 / 30'], ['DNS + internet', '25 / 25']],
+  gateway: [['Device availability 2/6', '8 / 25'], ['Gateway health — unreachable', '0 / 20'], ['Latency + packet loss', '26 / 30'], ['DNS + internet — both failing', '0 / 25']],
+  dns: [['Device availability 6/6', '25 / 25'], ['Gateway health', '20 / 20'], ['Latency + packet loss', '28 / 30'], ['DNS health — resolution failing', '0 / 10']],
+  internet: [['Device availability 6/6', '25 / 25'], ['Gateway health', '20 / 20'], ['Latency + packet loss', '28 / 30'], ['DNS + internet — external down', '0 / 25']],
+  latency: [['Device availability 6/6', '25 / 25'], ['Gateway health', '20 / 20'], ['Latency — above threshold', '2 / 15'], ['DNS + internet', '25 / 25']],
+  loss: [['Device availability 6/6', '25 / 25'], ['Gateway health', '20 / 20'], ['Packet loss — 20–40%', '3 / 15'], ['DNS + internet', '25 / 25']],
+  recovery: [['Device availability 6/6', '25 / 25'], ['Gateway health — restored', '20 / 20'], ['Latency + packet loss', '26 / 30'], ['DNS + internet', '25 / 25']] };
+
+const EVENTS = {
+  healthy: [['10:41', 'Monitoring cycle complete — 6/6 reachable'], ['10:41', 'Health score 98 / 100'], ['10:40', 'DNS resolution OK (14 ms)'], ['10:39', 'Gateway RTR-01 OK (2 ms)'], ['10:38', 'No fault hypothesis above threshold']],
+  device: [['10:36', 'Incident INC-015 created — Individual Device Failure'], ['10:36', 'Diagnosis: PC-02 unreachable, gateway healthy'], ['10:36', 'PC-02 unreachable (cycle 3 of 3)'], ['10:35', 'PC-02 unreachable (cycle 1 of 3)'], ['10:34', 'Monitoring cycle complete — 6/6 reachable']],
+  gateway: [['10:32', 'Recommendation generated'], ['10:32', 'Incident INC-016 created — priority CRITICAL'], ['10:32', 'Diagnosis: shared dependency RTR-01'], ['10:32', 'PC-01, PC-02, PC-03 unreachable'], ['10:32', 'Gateway RTR-01 unreachable'], ['10:30', 'Network healthy — 98 / 100']],
+  dns: [['10:28', 'Incident INC-017 created — DNS Failure'], ['10:28', 'External IP reachable, resolution failing'], ['10:28', 'DNS SERVFAIL (attempt 3 of 3)'], ['10:27', 'Gateway RTR-01 OK (2 ms)'], ['10:26', 'Network healthy — 97 / 100']],
+  internet: [['10:22', 'Incident INC-018 created — Internet / WAN Failure'], ['10:22', 'Gateway OK, external endpoint unreachable'], ['10:22', 'External endpoint 1.1.1.1 unreachable'], ['10:21', 'All local devices reachable'], ['10:20', 'Network healthy — 98 / 100']],
+  latency: [['10:18', 'Incident INC-019 created — High Latency'], ['10:18', 'Latency above threshold on 5 targets'], ['10:17', 'PC-02 round trip 212 ms (critical)'], ['10:16', 'PC-01 round trip 186 ms (high)'], ['10:15', 'Network healthy — 96 / 100']],
+  loss: [['10:12', 'Incident INC-020 created — Packet Loss'], ['10:12', 'Loss on gateway path 18%'], ['10:11', 'PC-02 packet loss 40%'], ['10:10', 'PC-01 packet loss 30%'], ['10:09', 'Network healthy — 97 / 100']],
+  recovery: [['10:35', 'Incident INC-014 closed — duration 3m 27s'], ['10:35', 'Recovery confirmed (cycle 2 of 2)'], ['10:35', 'Gateway RTR-01 reachable again'], ['10:34', 'PC-01, PC-02, PC-03 unreachable'], ['10:32', 'Gateway RTR-01 unreachable']]
+};
+
+const HISTORY = [
+  { id: 'INC-014', cause: 'Gateway failure — RTR-01', prio: 'Critical', status: 'Resolved', affected: 'PC-01, PC-02, PC-03', started: '10:32:15', resolved: '10:35:42', duration: '3m 27s', conf: 95 },
+  { id: 'INC-011', cause: 'DNS failure', prio: 'High', status: 'Resolved', affected: 'All clients', started: '09:14:02', resolved: '09:19:48', duration: '5m 46s', conf: 84 },
+  { id: 'INC-009', cause: 'Individual device failure — PRN-01', prio: 'Medium', status: 'Resolved', affected: 'PRN-01', started: '08:47:31', resolved: '08:52:10', duration: '4m 39s', conf: 88 }
+];
+
+const OPEN_ID = { device: 'INC-015', gateway: 'INC-016', dns: 'INC-017', internet: 'INC-018', latency: 'INC-019', loss: 'INC-020' };
+const OPEN_START = { device: '10:36:04', gateway: '10:32:15', dns: '10:28:19', internet: '10:22:40', latency: '10:18:07', loss: '10:12:55' };
+
+const TIMELINE = {
+  gateway: [['10:30', 'Network healthy — health score 98 / 100'], ['10:32', 'Gateway RTR-01 unreachable (5/5 packets lost)'], ['10:32', 'PC-01, PC-02, PC-03 unreachable in the same cycle'], ['10:32', 'Correlation found shared dependency RTR-01'], ['10:32', 'Diagnosis generated — Gateway Failure, confidence 95%'], ['10:32', 'Incident opened at priority CRITICAL'], ['10:32', 'Recommendation generated — check router power and cables'], ['10:33', 'Health score dropped to 34 / 100']],
+  recovery: [['10:32', 'Incident opened — Gateway Failure, confidence 95%'], ['10:33', 'Health score dropped to 34 / 100'], ['10:35', 'Gateway RTR-01 responded (2 ms)'], ['10:35', 'PC-01, PC-02, PC-03 reachable again'], ['10:35', 'Recovery confirmed over 2 consecutive cycles'], ['10:35', 'Incident closed — duration 3m 27s recorded'], ['10:36', 'Health score restored to 96 / 100']],
+  device: [['10:34', 'Network healthy — 6/6 devices reachable'], ['10:35', 'PC-02 unreachable (cycle 1 of 3)'], ['10:36', 'PC-02 unreachable (cycle 3 of 3) — threshold met'], ['10:36', 'Gateway and peer clients confirmed healthy'], ['10:36', 'Diagnosis generated — Individual Device Failure, 88%'], ['10:36', 'Incident opened at priority MEDIUM'], ['10:36', 'Recommendation generated — check power and cabling']],
+  dns: [['10:26', 'Network healthy — 97 / 100'], ['10:27', 'DNS resolution failed (attempt 1 of 3)'], ['10:28', 'DNS resolution failed (attempt 3 of 3)'], ['10:28', 'Gateway reachable, external IP reachable'], ['10:28', 'Diagnosis generated — DNS Failure, 84%'], ['10:28', 'Incident opened at priority HIGH']],
+  internet: [['10:20', 'Network healthy — 98 / 100'], ['10:22', 'External endpoint 1.1.1.1 unreachable'], ['10:22', 'Gateway reachable, all local devices reachable'], ['10:22', 'Diagnosis generated — Internet / WAN Failure, 86%'], ['10:22', 'Incident opened at priority CRITICAL']],
+  latency: [['10:15', 'Network healthy — 96 / 100'], ['10:16', 'PC-01 round trip 186 ms (high)'], ['10:17', 'PC-02 round trip 212 ms (critical)'], ['10:18', 'Latency above threshold on 5 targets'], ['10:18', 'Diagnosis generated — High Latency, 72%'], ['10:18', 'Incident opened at priority HIGH']],
+  loss: [['10:09', 'Network healthy — 97 / 100'], ['10:10', 'PC-01 packet loss 30%'], ['10:11', 'PC-02 packet loss 40%'], ['10:12', 'Loss detected on gateway path (18%)'], ['10:12', 'Diagnosis generated — Packet Loss, 76%'], ['10:12', 'Incident opened at priority HIGH']],
+  healthy: [['10:38', 'No fault hypothesis above threshold'], ['10:39', 'Gateway RTR-01 OK (2 ms)'], ['10:40', 'DNS resolution OK (14 ms)'], ['10:41', 'Monitoring cycle complete — 6/6 reachable']]
+};
+
+const SIMS = [
+  ['device', 'Individual device failure', 'Takes PC-02 offline; gateway and peers stay healthy.', '/api/simulation/device-failure'],
+  ['gateway', 'Gateway failure', 'Fails RTR-01; the three dependent clients and the WAN follow.', '/api/simulation/gateway-failure'],
+  ['dns', 'DNS failure', 'Resolution fails while the gateway and external IP respond.', '/api/simulation/dns-failure'],
+  ['internet', 'Internet failure', 'External endpoint unreachable with the local network intact.', '/api/simulation/internet-failure'],
+  ['latency', 'High latency', 'Raises round-trip times above the moderate threshold.', '/api/simulation/high-latency'],
+  ['loss', 'Packet loss', 'Introduces 20–40% loss across the shared segment.', '/api/simulation/packet-loss'],
+  ['recovery', 'Recovery', 'Restores all targets; the open incident closes automatically.', '/api/simulation/recovery'],
+  ['healthy', 'Reset to healthy', 'Clears simulated state and returns to live monitoring.', '/api/simulation/reset']
+];
+
+const PRIO_CLS = { Critical: 'st-down', High: 'st-warn', Medium: 'st-warn', Low: 'st-up', None: 'st-up' };
+
+class Component extends DCLogic {
+  state = { page: 'dash', scenario: null, dialog: false, detailId: null };
+
+  go = (page) => () => this.setState({ page });
+  setScenario = (key) => () => this.setState({ scenario: key, page: 'dash' });
+
+  scenarioKey() { return this.state.scenario || this.props.initialScenario || 'gateway'; }
+
+  renderVals() {
+    const key = this.scenarioKey();
+    const sc = SCEN[key], dg = DIAG[key], page = this.state.page;
+    const down = sc.down;
+    const deg = sc.degrade;
+
+    const dev = BASE.map(d => {
+      const isDown = down.includes(d.name);
+      const lat = isDown ? '—' : deg === 'latency' ? (d.lat * 16 + 40) + ' ms' : d.lat + ' ms';
+      const loss = isDown ? '100%' : deg === 'loss' ? [30, 40, 20, 18, 6, 25][BASE.indexOf(d)] + '%' : '0%';
+      return {
+        name: d.name, short: d.short, ip: d.ip, type: d.type, role: d.role,
+        state: isDown ? 'Offline' : deg ? 'Degraded' : 'Online',
+        cls: isDown ? 'st-down' : deg ? 'st-warn' : 'st-up',
+        chipBg: isDown ? INK : deg ? 'var(--color-neutral-200)' : OK_BG,
+        chipFg: isDown ? PAPER : OK_FG,
+        latency: lat, loss: loss, checked: isDown ? '3 cycles ago' : '2 s ago'
+      };
+    });
+
+    const st = (ok, okLabel, badLabel) => ({ state: ok ? okLabel : badLabel, cls: ok ? 'st-up' : 'st-down' });
+    const deps = [
+      Object.assign({ name: 'Gateway RTR-01' }, st(sc.gw === 'up', 'Online', 'Failed')),
+      Object.assign({ name: 'DNS resolution' }, st(sc.dns === 'up', 'Resolving', 'Failed')),
+      Object.assign({ name: 'Internet / WAN' }, st(sc.inet === 'up', 'Reachable', 'Failed'))
+    ];
+
+    const openInc = OPEN_ID[key] ? [{
+      id: OPEN_ID[key], cause: dg.cause, prio: dg.prio, status: 'Open', affected: dg.affected,
+      started: OPEN_START[key], resolved: '—', duration: 'ongoing', conf: dg.conf
+    }] : [];
+
+    const decorate = (i) => Object.assign({}, i, {
+      prioCls: PRIO_CLS[i.prio] || 'st-warn',
+      statusCls: i.status === 'Open' ? 'st-down' : 'st-res',
+      open: () => this.setState({ page: 'incident', detailId: i.id })
+    });
+    const incidents = openInc.concat(HISTORY).map(decorate);
+    const active = openInc.map(decorate);
+
+    const detailBase = incidents.find(i => i.id === this.state.detailId) || incidents[0];
+    const tlKey = detailBase.status === 'Open' ? key : (detailBase.id === 'INC-014' ? 'recovery' : key);
+    const detail = Object.assign({}, detailBase, {
+      devices: dg.affectedList.length ? dg.affectedList.map(a => ({ name: a[0] })) : [{ name: '—' }],
+      rules: [{ rule: dg.rule, evidence: dg.evidence[0][0] + ' · ' + dg.evidence[0][1] },
+              { rule: 'confidence_score', evidence: 'Weighted evidence total ' + dg.conf + ' of 100' }],
+      timeline: (TIMELINE[tlKey] || TIMELINE[key]).map((t, i, arr) => ({ time: t[0], text: t[1], dot: i === arr.length - 1 ? 'var(--color-accent)' : 'transparent' }))
+    });
+
+    return {
+      tabs: [{ title: 'Autonomous Network Guardian' }, { title: 'Flask · 127.0.0.1:5000' }],
+      cycle: this.props.cycleSeconds ?? 10,
+      lastCheck: '2 s ago',
+      scLabel: sc.label, scNote: sc.note,
+      onDash: page === 'dash', onDevices: page === 'devices', onDiag: page === 'diagnosis',
+      onInc: page === 'incidents', onSim: page === 'simulation', onIncDetail: page === 'incident',
+      goDash: this.go('dash'), goDevices: this.go('devices'), goDiag: this.go('diagnosis'),
+      goInc: this.go('incidents'), goSim: this.go('simulation'),
+
+      health: sc.health, healthPct: sc.health + '%',
+      healthLabel: sc.health >= 90 ? 'Healthy' : sc.health >= 60 ? 'Degraded' : 'Critical',
+      factors: FACTORS[key].map(f => ({ name: f[0], val: f[1] })),
+      deps, devices: dev, clients: dev.slice(0, 3),
+      onlineCount: dev.filter(d => d.state !== 'Offline').length, totalCount: dev.length,
+      gwChipBg: sc.gw === 'up' ? OK_BG : INK, gwChipFg: sc.gw === 'up' ? OK_FG : PAPER,
+      inetChipBg: sc.inet === 'up' ? OK_BG : INK, inetChipFg: sc.inet === 'up' ? OK_FG : PAPER,
+      gwMark: sc.gw === 'up' ? '✓' : '✕', inetMark: sc.inet === 'up' ? '✓' : '✕',
+      topoNote: this.props.showTopology === false ? '' : 'PC-01, PC-02 and PC-03 share RTR-01 as their only route out.',
+
+      events: EVENTS[key].map(e => ({ t: e[0], text: e[1] })),
+      activeIncidents: active, noActive: active.length === 0, incidents,
+      lastRecovery: HISTORY[0].duration,
+      detail,
+
+      diag: {
+        cause: dg.cause, conf: dg.conf, confPct: dg.conf + '%', prio: dg.prio,
+        prioCls: PRIO_CLS[dg.prio], rule: dg.rule, reasoning: dg.reasoning,
+        affected: dg.affected,
+        evidence: dg.evidence.map(e => ({ text: e[0], detail: e[1], score: e[2] })),
+        affectedList: dg.affectedList.map(a => ({ name: a[0], reason: a[1] })),
+        noneAffected: dg.affectedList.length === 0,
+        actions: dg.actions.map((a, i) => ({ n: (i + 1) + '.', text: a })),
+        hypotheses: dg.hyp.map((h, i) => ({ name: h[0], score: h[1], pct: h[1] + '%', fill: i === 0 ? 'var(--color-accent)' : 'var(--color-neutral-400)' }))
+      },
+
+      sims: SIMS.map(s => ({
+        label: s[1], note: s[2], endpoint: s[3], on: this.setScenario(s[0]),
+        active: key === s[0] ? 'ACTIVE' : '',
+        bg: key === s[0] ? 'var(--color-accent-100)' : 'transparent',
+        fg: 'var(--color-text)'
+      })),
+
+      dialog: this.state.dialog,
+      openDialog: () => this.setState({ dialog: true }),
+      closeDialog: () => this.setState({ dialog: false }),
+      stop: (e) => e.stopPropagation()
+    };
+  }
+}
+
+</script>
+</body>
+</html>
