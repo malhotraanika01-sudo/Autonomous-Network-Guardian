@@ -42,7 +42,10 @@ def test_seed_is_idempotent(db_path):
 
 
 def test_index_and_liveness_endpoints(client):
-    assert client.get("/").status_code == 200
+    root = client.get("/")
+    assert root.status_code == 302
+    assert root.headers["Location"].endswith("/dashboard")
+    assert client.get("/api").status_code == 200
 
     r = client.get("/api/health")
     assert r.status_code == 200

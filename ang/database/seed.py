@@ -21,23 +21,24 @@ SEED_DEVICES = [
 
 
 def seed_devices(conn: sqlite3.Connection) -> None:
-    """Insert the seed devices if the table is empty. Safe to call repeatedly."""
-    existing = conn.execute("SELECT COUNT(*) AS n FROM devices").fetchone()["n"]
-    if existing:
+    """Ensure the seed devices exist. Safe to call repeatedly and concurrently:
+    it never touches a name that is already present, so a user's own devices
+    and edits are preserved."""
+    names = {r["name"] for r in conn.execute("SELECT name FROM devices")}
+    if all(d[0] in names for d in SEED_DEVICES):
         return
 
-    ids: dict[str, int] = {}
     for name, ip, dtype, role, _dep in SEED_DEVICES:
-        cur = conn.execute(
-            "INSERT INTO devices (name, ip_address, device_type, role, status) "
+        conn.execute(
+            "INSERT OR IGNORE INTO devices (name, ip_address, device_type, role, status) "
             "VALUES (?, ?, ?, ?, 'unknown')",
             (name, ip, dtype, role),
         )
-        ids[name] = cur.lastrowid
 
+    ids = {r["name"]: r["id"] for r in conn.execute("SELECT id, name FROM devices")}
     for name, _ip, _dtype, _role, dep in SEED_DEVICES:
-        if dep:
+        if dep and name in ids and dep in ids:
             conn.execute(
-                "UPDATE devices SET depends_on = ? WHERE id = ?",
+                "UPDATE devices SET depends_on = ? WHERE id = ? AND depends_on IS NULL",
                 (ids[dep], ids[name]),
             )

@@ -1,6 +1,8 @@
 """Device registration and listing (PRD 5, 24.2, 26)."""
 from __future__ import annotations
 
+import sqlite3
+
 from flask import Blueprint, jsonify, request
 
 from ..database import models as m
@@ -34,6 +36,34 @@ def _device_payload(conn, d, latest) -> dict:
     }
 
 
+def _dependency_options(conn) -> list[dict]:
+    return [
+        {"id": d["id"], "name": d["name"], "ip_address": d["ip_address"],
+         "role": d["role"]}
+        for d in m.list_devices(conn)
+    ]
+
+
+def _suggested_device(conn) -> dict:
+    """A ready-to-save name + IP so the register dialog works on first click."""
+    devices = m.list_devices(conn)
+    names = {d["name"] for d in devices}
+    used_ips = {d["ip_address"] for d in devices}
+
+    name = next((f"PC-{n:02d}" for n in range(1, 100) if f"PC-{n:02d}" not in names), "")
+
+    prefix = "192.168.1."
+    gw = m.get_gateway(conn)
+    if gw and gw["ip_address"].count(".") == 3:
+        prefix = gw["ip_address"].rsplit(".", 1)[0] + "."
+    ip = next((f"{prefix}{h}" for h in range(11, 250)
+               if f"{prefix}{h}" not in used_ips), "")
+
+    gw_id = gw["id"] if gw else None
+    return {"name": name, "ip_address": ip, "device_type": "Computer",
+            "role": "Client", "depends_on": gw_id}
+
+
 @bp.get("/devices")
 def list_devices():
     conn = get_db()
@@ -43,6 +73,19 @@ def list_devices():
         "devices": devices,
         "online": sum(1 for d in devices if d["status"] == "online"),
         "total": len(devices),
+        "dependency_options": _dependency_options(conn),
+        "suggested": _suggested_device(conn),
+    })
+
+
+@bp.get("/devices/options")
+def device_options():
+    conn = get_db()
+    return jsonify({
+        "dependency_options": _dependency_options(conn),
+        "device_types": sorted(VALID_TYPES),
+        "roles": sorted(VALID_ROLES),
+        "suggested": _suggested_device(conn),
     })
 
 
@@ -76,15 +119,22 @@ def create_device():
         errors.append(f"role must be one of {sorted(VALID_ROLES)}")
 
     conn = get_db()
-    if depends_on is not None:
-        if m.get_device(conn, depends_on) is None:
-            errors.append("depends_on must reference an existing device")
-    if name and m.list_devices(conn) and any(d["name"] == name for d in m.list_devices(conn)):
+    existing = m.list_devices(conn)
+    if depends_on is not None and m.get_device(conn, depends_on) is None:
+        errors.append("depends_on must reference an existing device")
+    if name and any(d["name"] == name for d in existing):
         errors.append("a device with that name already exists")
+    if ip and any(d["ip_address"] == ip for d in existing):
+        errors.append("a device with that IP address already exists")
     if errors:
         return jsonify({"errors": errors}), 400
 
-    device_id = m.create_device(conn, name, ip, dtype, role, depends_on)
-    conn.commit()
+    try:
+        device_id = m.create_device(conn, name, ip, dtype, role, depends_on)
+        conn.commit()
+    except sqlite3.IntegrityError as exc:
+        conn.rollback()
+        return jsonify({"errors": [f"could not save device: {exc}"]}), 409
+
     d = m.get_device(conn, device_id)
     return jsonify(_device_payload(conn, d, m.latest_measurements(conn))), 201

@@ -18,12 +18,16 @@ def current_registry():
 
 
 def register_routes(app: Flask) -> None:
+    from .dashboard import bp as dashboard_bp
     from .devices import bp as devices_bp
     from .incidents import bp as incidents_bp
     from .monitoring import bp as monitoring_bp
+    from .pages import bp as pages_bp
     from .simulation import bp as simulation_bp
 
     app.register_blueprint(devices_bp)
     app.register_blueprint(monitoring_bp)
     app.register_blueprint(simulation_bp)
     app.register_blueprint(incidents_bp)
+    app.register_blueprint(dashboard_bp)
+    app.register_blueprint(pages_bp)

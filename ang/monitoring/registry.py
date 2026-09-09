@@ -26,6 +26,10 @@ class ProviderRegistry:
         self.mode = mode
 
     def describe(self) -> dict:
-        d = {"mode": self.mode, "scenario": self.simulator.scenario_key,
-             "scenario_label": self.simulator.scenario.label}
-        return d
+        sc = self.simulator.scenario
+        return {
+            "mode": self.mode,
+            "scenario": self.simulator.scenario_key,
+            "scenario_label": sc.label,
+            "scenario_note": sc.note,
+        }

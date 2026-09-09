@@ -1,6 +1,7 @@
 # ANG — build progress
 
 Phase-by-phase status. Ticked items are implemented and covered by tests.
+**Phases 0–7 all complete — 67 tests passing.**
 
 ## Decisions taken (defaults — tell me to change any)
 - **Probe mode**: `simulation` is the default and the demo path. `live` mode
@@ -65,17 +66,46 @@ Phase-by-phase status. Ticked items are implemented and covered by tests.
   `GET /api/events`, and `GET /api/health` now returns the real score +
   `active_incidents`. `GET /api/health/score` for the score alone.
 
-### Test coverage — 40 passing
-`tests/test_phase0_scaffolding.py` · `test_phase1_monitoring.py` ·
-`test_phase2_simulation.py` · `test_phase3_diagnosis.py` (PRD success
-criteria A–F) · `test_phase4_incidents.py` (lifecycle, flap suppression,
-recovery auto-close, supersede, health score).
+## Phase 5 — Complete REST API ✅
+- `GET /api/dashboard` — one aggregate call: monitoring status, scenario,
+  health score + factors, devices, shared dependencies, topology, diagnosis,
+  active incidents, recent events, last recovery.
+- `GET /api/devices` now carries `dependency_options`; `GET /api/devices/options`
+  for the register dialog (options + valid types + roles).
+- `POST /api/monitoring/reset-data` — clears measurements + incident history,
+  keeps devices, returns to healthy (clean-demo aid).
+- Every PRD §26 endpoint present and returning stable JSON.
 
-## Next — Phase 5 (not started)
-Complete the REST surface for the frontend: finalise JSON contracts for every
-mockup page, add a dashboard aggregate endpoint (health + devices + diagnosis +
-active incidents + recent events in one call), device dependency options for
-the register dialog. Then Phase 6: port the mockup to Flask templates + JS.
+## Phase 6 — Frontend ✅
+- Server-rendered page shells (`ang/templates/`, `ang/routes/pages.py`):
+  `/dashboard`, `/devices`, `/diagnosis`, `/incidents`, `/incidents/<id>`,
+  `/simulation`. `/` redirects to `/dashboard`.
+- Reuses the mockup's `industry.css` "blueprint" system verbatim +
+  `static/css/app.css` for the ANG-specific chrome.
+- `static/js/app.js` — one poller per page (4 s), fetches the page's JSON
+  endpoint and renders: health card, diagnosis + evidence + confidence,
+  shared-dependency + device chips, topology widget, recent events, incident
+  tables, incident timeline, hypothesis bar chart, simulation grid, and the
+  register-device dialog (with the depends-on selector).
+- Verified in a real browser: all 6 pages render, scenario switching + the
+  register dialog work, no console errors.
+
+## Phase 7 — Demo hardening ✅
+- `tests/test_phase7_demo.py` walks the full demonstration workflow over HTTP
+  (PRD §23 / §37 success criteria A–F), including the complete recovery cycle
+  and a 9-step scenario sequence that must leave a consistent 3-incident
+  history.
+- `README.md` — install, run, demo script, architecture map, config reference.
+- Monitoring stays off the request thread; `reset-data` gives a clean start.
+
+### Test coverage — 67 passing
+phases 0–4 as above · `test_phase5_api.py` (aggregate endpoint, options,
+reset) · `test_phase6_frontend.py` (page shells, nav, static assets) ·
+`test_phase7_demo.py` (end-to-end A–F).
+
+## All planned phases complete.
+Possible follow-ups (PRD §36 "future extensions"): auth/roles, live-mode
+hardening, notifications, historical analytics, SSE push instead of polling.
 
 ---
 ## Run it

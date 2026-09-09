@@ -16,9 +16,16 @@ SCHEMA_PATH = os.path.join(os.path.dirname(__file__), "schema.sql")
 
 
 def _connect(path: str) -> sqlite3.Connection:
-    conn = sqlite3.connect(path, detect_types=sqlite3.PARSE_DECLTYPES)
+    # timeout: wait up to 5s for a lock instead of erroring immediately - the
+    # background monitoring thread and request handlers use separate connections.
+    conn = sqlite3.connect(path, detect_types=sqlite3.PARSE_DECLTYPES, timeout=5.0)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute("PRAGMA busy_timeout = 5000")
+    try:
+        conn.execute("PRAGMA journal_mode = WAL")
+    except sqlite3.OperationalError:
+        pass
     return conn
 
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import os
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, redirect, request
 
 from .config import Config, TestConfig
 from .database import db as db_module
@@ -37,13 +37,29 @@ def create_app(config_object: type | None = None, **overrides) -> Flask:
     from .routes import register_routes
     register_routes(app)
 
+    @app.errorhandler(Exception)
+    def _json_errors(exc):
+        from werkzeug.exceptions import HTTPException
+
+        if isinstance(exc, HTTPException):
+            if request.path.startswith("/api/"):
+                return jsonify({"error": exc.description, "status": exc.code}), exc.code
+            return exc
+        app.logger.exception("unhandled error on %s", request.path)
+        if request.path.startswith("/api/"):
+            return jsonify({"error": f"{type(exc).__name__}: {exc}"}), 500
+        raise exc
+
     @app.get("/")
     def index():
+        return redirect("/dashboard")
+
+    @app.get("/api")
+    def api_index():
         return jsonify({
             "app": "Autonomous Network Guardian",
             "version": __version__,
-            "phase": "0-4 (scaffolding, monitoring, simulation, diagnosis, incidents+health)",
-            "api": sorted(
+            "endpoints": sorted(
                 str(r) for r in app.url_map.iter_rules() if str(r).startswith("/api")
             ),
         })

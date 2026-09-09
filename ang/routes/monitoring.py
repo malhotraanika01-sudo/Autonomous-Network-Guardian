@@ -58,6 +58,29 @@ def get_diagnosis():
     return jsonify(_latest_diagnosis())
 
 
+@bp.post("/monitoring/reset-data")
+def reset_data():
+    """Wipe measurements + incident history and return to a healthy baseline.
+
+    Devices are kept. Handy for starting a clean demo.
+    """
+    conn = get_db()
+    for table in ("diagnostic_events", "incident_devices", "incidents",
+                  "service_checks", "measurements"):
+        conn.execute(f"DELETE FROM {table}")
+    conn.execute("UPDATE devices SET status = 'unknown'")
+    conn.commit()
+
+    engine = current_engine()
+    engine.incident_manager._pending.clear()
+    engine.latest_diagnosis = None
+    engine.latest_health = None
+    engine.latest_observation = None
+    engine.latest_incident_sync = None
+    current_registry().simulator.set_scenario("healthy")
+    return jsonify({"reset": True, "scenario": current_registry().describe()})
+
+
 @bp.get("/health")
 def health():
     """Network health score (0-100, PRD 21) plus device counts, current

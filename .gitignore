@@ -4,4 +4,8 @@ __pycache__/
 database.sqlite
 .pytest_cache/
 *.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
 .thumbnail
+scratch_*
+"Screenshot *.png"
