@@ -9,3 +9,7 @@ database.sqlite
 .thumbnail
 scratch_*
 "Screenshot *.png"
+
+# Claude Code assistant files (local only)
+.claude/
+CLAUDE.md
